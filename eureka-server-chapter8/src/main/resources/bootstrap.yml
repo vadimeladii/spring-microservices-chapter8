@@ -1,0 +1,8 @@
+spring:
+  application:
+    name: eureka-server-chapter8
+  profiles:
+    active: default
+  cloud:
+    config:
+      uri: http://localhost:8071

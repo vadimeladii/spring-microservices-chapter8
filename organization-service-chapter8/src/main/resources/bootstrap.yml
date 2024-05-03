@@ -1,0 +1,16 @@
+spring:
+  application:
+    name: organization-service-chapter8
+  profiles:
+    active: default
+  cloud:
+    config:
+      uri: http://localhost:8071
+server:
+  port: 8081
+
+logging:
+  level:
+    com.netflix: WARN
+    org.springframework.web: WARN
+    com.example: DEBUG

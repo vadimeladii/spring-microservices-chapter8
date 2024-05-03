@@ -1,0 +1,102 @@
+services:
+
+  licensing-service-chapter8:
+    image: vadimeladii7/licensing-service-chapter8:latest
+#    ports:
+#      - "8080:8080"
+    environment:
+      - "SPRING_PROFILES_ACTIVE=dev"
+      - "SPRING_CLOUD_CONFIG_URI=http://config-server-chapter8:8071"
+      - "SERVER_PORT=0"
+    networks:
+      - backend
+    deploy:
+      mode: replicated
+      replicas: 3
+    depends_on:
+      config-server-chapter8:
+        condition: service_started
+      database:
+        condition: service_healthy
+
+  organization-service-chapter8:
+    image: vadimeladii7/organization-service-chapter8:latest
+#    ports:
+#      - "8081:8081"
+    environment:
+      - "SPRING_PROFILES_ACTIVE=dev"
+      - "SPRING_CLOUD_CONFIG_URI=http://config-server-chapter8:8071"
+      - "SERVER_PORT=0"
+    networks:
+      - backend
+    deploy:
+      mode: replicated
+      replicas: 3
+    depends_on:
+      config-server-chapter8:
+        condition: service_started
+      database:
+        condition: service_healthy
+
+  config-server-chapter8:
+    image: vadimeladii7/config-server-chapter8:latest
+    ports:
+      - "8071:8071"
+    networks:
+      - backend
+
+  eureka-server-chapter8:
+    image: vadimeladii7/eureka-server-chapter8:latest
+    ports:
+      - "8070:8070"
+    environment:
+      - "SPRING_CLOUD_CONFIG_URI=http://config-server-chapter8:8071"
+      - "SPRING_PROFILES_ACTIVE=dev"
+    networks:
+      - backend
+    depends_on:
+      database:
+        condition: service_healthy
+      config-server-chapter8:
+        condition: service_started
+
+  gateway-server-chapter8:
+    image: vadimeladii7/gateway-server-chapter8:latest
+    ports:
+      - "8072:8072"
+    environment:
+      - "SPRING_CLOUD_CONFIG_URI=http://config-server-chapter8:8071"
+      - "SPRING_PROFILES_ACTIVE=dev"
+    networks:
+      - backend
+    depends_on:
+      database:
+        condition: service_healthy
+      config-server-chapter8:
+        condition: service_started
+      eureka-server-chapter8:
+        condition: service_started
+
+
+  database:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+      POSTGRES_DB: "ostock_dev"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/1-init.sql
+      - ./data.sql:/docker-entrypoint-initdb.d/2-data.sql
+    networks:
+      - backend
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  backend:
+    driver: bridge

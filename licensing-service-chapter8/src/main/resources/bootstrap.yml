@@ -1,0 +1,42 @@
+spring:
+  application:
+    name: licensing-service-chapter8
+  profiles:
+    active: default
+  cloud:
+    config:
+      uri: http://localhost:8071
+server:
+  port: 8080
+
+resilience4j.circuitbreaker:
+  instances:
+    licenseService:
+      registerHealthIndicator: true
+      permitted-number-of-calls-in-half-open-state: 3
+      waitDurationInOpenState: 10s
+      failureRateThreshold: 50
+      recordExceptions:
+        - org.springframework.web.client.HttpServerErrorException
+        - java.io.IOException
+        - java.util.concurrent.TimeoutException
+        - org.springframework.web.client.ResourceAccessException
+
+resilience4j.retry:
+  instances:
+    retryLicenseService:
+      max-attempts: 5
+      waitDuration: 10000
+      retry-exceptions:
+        - java.util.concurrent.TimeoutException
+
+resilience4j.bulkhead:
+  instances:
+    bulkheadLicenseService:
+      maxConcurrentCalls: 20
+
+logging:
+  level:
+    com.netflix: WARN
+    org.springframework.web: WARN
+    com.example: DEBUG
